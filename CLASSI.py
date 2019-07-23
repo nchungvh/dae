@@ -13,12 +13,12 @@ import pandas as pd
 from sklearn.model_selection import KFold
 df = pd.read_csv('output.csv', sep=',')
 
-data = df.values
+Data = df.values
 
 
 ##### tinh acc tren tung cot:
 for cols_index in range(11):
-    data = np.concatenate((data[:,:cols_index],data[:,(cols_index+1):]), axis = 1)
+    data = np.concatenate((Data[:,:cols_index],Data[:,(cols_index+1):]), axis = 1)
     classify = []
     for i in range(11):
         a = np.asarray(list(set(data[:, i])))
@@ -61,7 +61,7 @@ for cols_index in range(11):
         return mask,mask1
 
     batch_size = 128
-    learning_rate = 1e-5
+    learning_rate = 1e-6
 
     class autoencoder(nn.Module):
         def __init__(self):
@@ -106,6 +106,7 @@ for cols_index in range(11):
     # X is the feature set and y is the target
     scores = []
     for train_index, test_index in skf.split(train_data):
+
         model = autoencoder()
         optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=1e-5)
@@ -142,8 +143,8 @@ for cols_index in range(11):
                 if(count_iters%5 ==0):
                     print('epoch: {}  iters: {}    train loss: {}      valid loss: {}     '.format(epoch,count_iters,loss1,testloss))
                 
-                if((epoch == 0)&(count_iters==0)):
-                    pretestloss = testloss
+                if((epoch == 0)&(count_iters==1)):
+                    pretestloss = testloss    #init pretestloss at epoch 0, iter 1
                 if(testloss <= pretestloss):
                     pretestloss = testloss
                 if(testloss > pretestloss): #compare validloss with pre vlid loss
