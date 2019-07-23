@@ -106,7 +106,6 @@ for cols_index in range(11):
     # X is the feature set and y is the target
     scores = []
     for train_index, test_index in skf.split(train_data):
-        count_epoch=0
         model = autoencoder()
         optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=1e-5)
@@ -116,7 +115,6 @@ for cols_index in range(11):
         dataloader = DataLoader(train, batch_size=batch_size, shuffle=True)
 
         for epoch in range(2000):
-            count_epoch+=1
             count_iters = 0
             for data in dataloader:
                 count_iters+= 1
@@ -142,9 +140,9 @@ for cols_index in range(11):
                 
                 #compute acc on test_data
                 if(count_iters%5 ==0):
-                    print('epoch: {}  iters: {}    train loss: {}      valid loss: {}     '.format(count_epoch,count_iters,loss1,testloss))
+                    print('epoch: {}  iters: {}    train loss: {}      valid loss: {}     '.format(epoch,count_iters,loss1,testloss))
                 
-                if(epoch == 0):
+                if((epoch == 0)&(count_iters==0)):
                     pretestloss = testloss
                 if(testloss <= pretestloss):
                     pretestloss = testloss
