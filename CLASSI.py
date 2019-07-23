@@ -141,10 +141,12 @@ for cols_index in range(11):
                 testloss = MSEloss(testout,test,mask)
                 
                 #compute acc on test_data
-                if(epoch%5 ==0):
+                if(count_iters%5 ==0):
                     print('epoch: {}  iters: {}    train loss: {}      valid loss: {}     '.format(count_epoch,count_iters,loss1,testloss))
                 
                 if(epoch == 0):
+                    pretestloss = testloss
+                if(testloss <= pretestloss):
                     pretestloss = testloss
                 if(testloss > pretestloss): #compare validloss with pre vlid loss
                     noisy_test_set,mask = add_noise(test_set)
@@ -159,6 +161,8 @@ for cols_index in range(11):
                     print('acc final:                         ',acc1)
                     scores.append(acc1)
                     break
+
+
 
             else:
                 continue
