@@ -61,7 +61,7 @@ for cols_index in range(11):
         return mask,mask1
 
     batch_size = 128
-    learning_rate = 1e-3
+    learning_rate = 1e-5
 
     class autoencoder(nn.Module):
         def __init__(self):
@@ -106,6 +106,7 @@ for cols_index in range(11):
     # X is the feature set and y is the target
     scores = []
     for train_index, test_index in skf.split(train_data):
+        count_epoch=0
         model = autoencoder()
         optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=1e-5)
@@ -115,7 +116,11 @@ for cols_index in range(11):
         dataloader = DataLoader(train, batch_size=batch_size, shuffle=True)
 
         for epoch in range(2000):
+            count_epoch+=1
+            count_iters = 0
             for data in dataloader:
+                count_iters+= 1
+
                 noisy_data,mask = add_noise(data)
                 noisy_data = Variable(torch.FloatTensor(noisy_data))
                 data = data.type(torch.FloatTensor)
@@ -137,7 +142,7 @@ for cols_index in range(11):
                 
                 #compute acc on test_data
                 if(epoch%5 ==0):
-                    print('epoch: {}    train loss: {}      valid loss: {}     '.format(epoch,loss1,testloss))
+                    print('epoch: {}  iters: {}    train loss: {}      valid loss: {}     '.format(count_epoch,count_iters,loss1,testloss))
                 
                 if(epoch == 0):
                     pretestloss = testloss
