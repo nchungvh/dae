@@ -26,13 +26,13 @@ for cols_index in range(11):
 
     num_train = int((len(data)*0.8))
     test_data = data[num_train:,:].copy()
-    data  = torch.from_numpy(data).double().cuda()
+    datagoc  = torch.from_numpy(data).double()
 
 
 
 
 
-    Dim = data.size(1)
+    Dim = datagoc.size(1)
     #
     Min_Val = np.zeros(Dim)
     Max_Val = np.zeros(Dim)
@@ -43,14 +43,15 @@ for cols_index in range(11):
     # test_data = data[num_train:,:]
 
     #Normalize
-    for i in range(data.size(1)):
-        Min_Val[i] = min(data[:,i])
-        Max_Val[i] = max(data[:,i] - min(data[:,i]))
-        data[:,i] = (data[:,i] - min(data[:,i])) / (max(data[:,i] - min(data[:,i])) + 1e-6)
-    train_data = data[:num_train,:]
+    for i in range(datagoc.size(1)):
+        Min_Val[i] = min(datagoc[:,i])
+        Max_Val[i] = max(datagoc[:,i] - min(datagoc[:,i]))
+        datagoc[:,i] = (datagoc[:,i] - min(datagoc[:,i])) / (max(datagoc[:,i] - min(datagoc[:,i])) + 1e-6)
+    train_data = datagoc[:num_train,:]
+    test_set = datagoc[num_train:,:]
 
     def add_noise(inputs):
-        mask = torch.ones(inputs.size(0),inputs.size(1))/5
+        mask = torch.ones(inputs.size(0),inputs.size(1))/2
         mask1 = torch.zeros(inputs.size(0),inputs.size(1))
         for i in range(inputs.size(0)):
             for j in range(inputs.size(1)):
@@ -66,16 +67,14 @@ for cols_index in range(11):
         def __init__(self):
             super(autoencoder, self).__init__()
             self.encoder = nn.Sequential(
-                nn.Linear(Dim, 8),
+                nn.Linear(Dim, 16),
                 nn.ReLU(True),
-                nn.Linear(8,8),
+                nn.Linear(16,16),
                 nn.ReLU(True))
             self.decoder = nn.Sequential(
-                nn.Linear(8,8),
+                nn.Linear(16,16),
                 nn.ReLU(True),
-                nn.Linear(8,8),
-                nn.ReLU(True),
-                nn.Linear(8,Dim),
+                nn.Linear(16,Dim),
                 nn.Sigmoid())
 
         def forward(self, x):
@@ -115,7 +114,7 @@ for cols_index in range(11):
         test = train_data[test_index]
         dataloader = DataLoader(train, batch_size=batch_size, shuffle=True)
 
-        for epoch in range(20000):
+        for epoch in range(2000):
             for data in dataloader:
                 noisy_data,mask = add_noise(data)
                 noisy_data = Variable(torch.FloatTensor(noisy_data))
@@ -127,18 +126,31 @@ for cols_index in range(11):
                 loss1.backward()
                 optimizer.step()
 
+                #compute MSELoss on valid data
+
                 noisy_test,mask = add_noise(test)
                 noisy_test = Variable(torch.FloatTensor(noisy_test))
                 test = test.type(torch.FloatTensor)
                 testout = model(noisy_test)
                 testout = testout.type(torch.FloatTensor)
                 testloss = MSEloss(testout,test,mask)
-                testout = testout.detach().numpy()
-                acc1 = acc(testout,test_data,mask)
-                print('acc:    ',acc1)
+                
+                #compute acc on test_data
+                if(epoch%5 ==0):
+                    print('epoch: {}    train loss: {}      valid loss: {}     '.format(epoch,loss1,testloss))
+                
                 if(epoch == 0):
                     pretestloss = testloss
-                if(testloss > pretestloss):
+                if(testloss > pretestloss): #compare validloss with pre vlid loss
+                    noisy_test_set,mask = add_noise(test_set)
+                    noisy_test_set = Variable(torch.FloatTensor(noisy_test_set))
+                    test_set = test_set.type(torch.FloatTensor)
+                    test_set_out = model(noisy_test_set)
+                    test_set_out = test_set_out.type(torch.FloatTensor)
+                    test_set_loss = MSEloss(test_set_out,test_set,mask)
+                    test_set_out = test_set_out.detach().numpy()
+                    acc1 = acc(test_set_out,test_data,mask)
+
                     print('acc final:                         ',acc1)
                     scores.append(acc1)
                     break
