@@ -167,7 +167,7 @@ for train_index, test_index in skf.split(train_data):
                 test_set_out = test_set_out.detach().numpy()
                 acc1 = acc(test_set_out,test_data,index)
 
-                print('acc final: {}   index:  {}     trainloss: {}                    'format(acc1,index,loss1))
+                print('acc final: {}   index:  {}     trainloss: {}                    '.format(acc1,index,loss1))
 
 
 
